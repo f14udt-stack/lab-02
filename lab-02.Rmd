@@ -12,7 +12,6 @@ library(tidyverse)
 library(readxl)
 ```
 
-
 ## Load & join data sets
 
 ```{r load-data, message = FALSE}
@@ -33,8 +32,6 @@ data4 <- read_excel("data/UN_country_region.xlsx")
 
 
 ```
-
-
 
 ```{r join-data, message = FALSE}
 # Member 2 (pair 1) write code to create object 'plastic_data_all':
@@ -64,7 +61,6 @@ plastic_data_all <- data4 %>%
 
 ```
 
-
 ```{r print-data, message = FALSE}
 # Member 2 (pair 1) adds code here to view the first 10 rows of 'plastic_data_all'
 plastic_data_all %>% head(n = 10)
@@ -72,45 +68,98 @@ plastic_data_all %>% head(n = 10)
 
 ```
 
-
-
 ## Exercises
 
 ### Ex 1.
 
 ```{r Ex1, message = FALSE}
-# Write your code here to answer exercise 1
+# Write your code here to answer exercise 1: 
+plastic_data_all %>%
+  group_by(region) %>%
+  summarise(num_countries = n()) %>%
+  arrange(desc(num_countries))
+
+cat("The region with the most coastal countries is Africa.")
 
 
 
 ```
-
-
 
 ### Ex 2.
 
-```{r Ex2, message = FALSE}
+```{r Ex2, message=FALSE}
 # Write your code here to answer exercise 2
+plastic_data_all <- plastic_data_all %>%
+  mutate(total_mismanage_plastic = mismanaged_plastic * population)
+plastic_data_all %>%
+  group_by(region) %>%
+  summarise(mean_total = mean(total_mismanage_plastic, na.rm = TRUE)) %>%
+  arrange(desc(mean_total))
 
-
+cat("Asia has the highest total mismanaged plastic waste per country on average, and Oceania has the lowest.")
 
 ```
-
 
 ### Ex 3.
 
 ```{r Ex3, message = FALSE}
 # Write your code here to answer exercise 3
+plastic_data_all <- plastic_data_all %>%
+  mutate(pct_mismanaged_plastic_ocean =
+           mismanaged_plastic_ocean / mismanaged_plastic * 100)
+
+plastic_data_all %>%
+  group_by(region) %>%
+  summarise(median_pct = median(pct_mismanaged_plastic_ocean, na.rm = TRUE))
 
 
+filter(plastic_data_all, region == "Africa" & is.nan(pct_mismanaged_plastic_ocean))
+
+plastic_data_all %>%
+  drop_na(pct_mismanaged_plastic_ocean) %>%
+  group_by(region) %>%
+  summarise(median_pct = median(pct_mismanaged_plastic_ocean)) %>%
+  arrange(desc(median_pct))
+
+cat("Africa's median is NaN because Somalia has mismanaged_plastic = 0 but mismanaged_plastic_ocean > 0, 
+creating a 0/0 division that is mathematically undefined.")
+
+cat("After removing missing values, Oceania has the lowest median percentage of mismanaged plastic entering the ocean, while Asia has one of the highest.")
 
 ```
-
 
 ### Ex 4.
 
 ```{r Ex4, message = FALSE}
 # Write your code here to answer exercise 4
+
+# Step 1 – Rename population → pop
+plastic_data_all <- plastic_data_all %>%
+  rename(pop = population)
+
+# Step 2 – Rename other long variables to shorter names
+plastic_data_all <- plastic_data_all %>%
+  rename(
+    mis_plastic_pc = mismanaged_plastic,
+    mis_ocean_pc   = mismanaged_plastic_ocean,
+    mis_total      = total_mismanage_plastic,
+    pct_ocean      = pct_mismanaged_plastic_ocean
+  )
+
+# Step 3 – Shorten the long region name “Latin America and the Caribbean” → “LAC”
+plastic_data_all <- plastic_data_all %>%
+  mutate(region = str_replace_all(region,
+                                  "Latin America and the Caribbean",
+                                  "LAC"))
+
+
+cat("All variable names have been shortened and the region name 'Latin America and the Caribbean' replaced with 'LAC'.")
+
+#Table to see which regions have highest values for average mismanaged plastic per citizen.
+plastic_data_all %>%
+  group_by(region) %>%
+  summarise(mean_mismanaged_pc = mean(mis_plastic_pc, na.rm = TRUE)) %>%
+  arrange(desc(mean_mismanaged_pc))
 
 
 
